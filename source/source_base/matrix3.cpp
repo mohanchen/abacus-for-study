@@ -41,24 +41,35 @@ Matrix3 Matrix3::Transpose(void) const
     return Matrix3(e11, e21, e31, e12, e22, e32, e13, e23, e33);
 }
 
+// Fix 1: Inverse() - two issues fixed:
+//   (a) Original code silently set d=1 when det==0, returning a wrong result.
+//       Now it prints a warning and returns a zero matrix.
+//   (b) Eliminated negative zero (-0.0) by adding 0.0 to each element.
+//       In IEEE 754, -0.0 + 0.0 = 0.0, while non-zero values are unchanged.
 Matrix3 Matrix3::Inverse(void) const
 {
     double d = this->Det();
-
+ 
     if(d == 0)
     {
-        d = 1;
+        std::cerr << "Warning: Matrix3::Inverse() called on a singular matrix "
+                  << "(determinant = 0). Returning zero matrix." << std::endl;
+        return Matrix3(0, 0, 0,
+                       0, 0, 0,
+                       0, 0, 0);
     }
-
-    return Matrix3((e22*e33 - e23*e32) / d,
-                  -(e12*e33 - e13*e32) / d,
-                   (e12*e23 - e13*e22) / d,
-                  -(e21*e33 - e23*e31) / d,
-                   (e11*e33 - e13*e31) / d,
-                  -(e11*e23 - e13*e21) / d,
-                   (e21*e32 - e22*e31) / d,
-                  -(e11*e32 - e12*e31) / d,
-                   (e11*e22 - e12*e21) / d);
+ 
+    auto fix_zero = [](double val) -> double { return val + 0.0; };
+ 
+    return Matrix3(fix_zero((e22*e33 - e23*e32) / d),
+                   fix_zero(-(e12*e33 - e13*e32) / d),
+                   fix_zero((e12*e23 - e13*e22) / d),
+                   fix_zero(-(e21*e33 - e23*e31) / d),
+                   fix_zero((e11*e33 - e13*e31) / d),
+                   fix_zero(-(e11*e23 - e13*e21) / d),
+                   fix_zero((e21*e32 - e22*e31) / d),
+                   fix_zero(-(e11*e32 - e12*e31) / d),
+                   fix_zero((e11*e22 - e12*e21) / d));
 }
 
 Matrix3& Matrix3::operator = (const Matrix3 &m)
@@ -93,8 +104,17 @@ Matrix3& Matrix3::operator *=(const double &s)
     return *this;
 }
 
+// Fix 2: operator/= - added division-by-zero check.
+//   Original code had no check, which would produce inf or nan values
+//   silently when s == 0.
 Matrix3& Matrix3::operator /=(const double &s)
 {
+    if(s == 0)
+    {
+        std::cerr << "Warning: Matrix3::operator/= called with divisor = 0. "
+                  << "Matrix unchanged." << std::endl;
+        return *this;
+    }
     e11 /= s; e12 /= s; e13 /= s;
     e21 /= s; e22 /= s; e23 /= s;
     e31 /= s; e32 /= s; e33 /= s;
@@ -130,8 +150,16 @@ Matrix3 operator -(const Matrix3 &m1, const Matrix3 &m2)
 }
 
 //m/s
+// Fix 3: operator/ - added division-by-zero check.
+//   Same issue as operator/=: original code had no protection against s == 0.
 Matrix3 operator /(const Matrix3 &m, const double &s)
 {
+    if(s == 0)
+    {
+        std::cerr << "Warning: Matrix3 operator/ called with divisor = 0. "
+                  << "Returning original matrix." << std::endl;
+        return m;
+    }
     return Matrix3(m.e11 / s, m.e12 / s, m.e13 / s,
                    m.e21 / s, m.e22 / s, m.e23 / s,
                    m.e31 / s, m.e32 / s, m.e33 / s);
