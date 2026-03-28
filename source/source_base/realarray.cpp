@@ -78,6 +78,7 @@ realArray::realArray(const realArray &cd)
 realArray ::~realArray()
 {
     freemem();
+    --arrayCount;
 }
 
 void realArray::freemem()
