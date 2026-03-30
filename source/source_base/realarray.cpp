@@ -84,6 +84,7 @@ void realArray::freemem()
 {
 		delete [] ptr;
 		ptr = NULL;
+		--arrayCount;
 }
 
 void realArray::create(const int d1,const int d2,const int d3,const int d4)
@@ -126,6 +127,7 @@ void realArray::create(const int d1,const int d2,const int d3)
 
 const realArray &realArray::operator=(const realArray &right)
 {
+	assert(size == right.size); // Assignment only allowed for arrays of the same size
 	for (int i = 0;i < size;i++) ptr[i] = right.ptr[i];
 	return *this;// enables x = y = z;
 }
