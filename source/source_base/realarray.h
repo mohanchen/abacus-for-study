@@ -20,8 +20,6 @@ namespace ModuleBase
 class realArray
 {
   public:
-    double * ptr = nullptr;
-
     realArray(const int d1 = 1, const int d2 = 1, const int d3 = 1);
     realArray(const int d1, const int d2, const int d3, const int d4);
     ~realArray();
@@ -140,6 +138,7 @@ class realArray
     }
 
   private:
+    double * ptr = nullptr;
     int size;
     int dim;
     int bound1, bound2, bound3, bound4;
