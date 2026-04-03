@@ -4,6 +4,7 @@
 #include <complex>
 #include <cstdlib>
 #include <cassert>
+#include<algorithm>
 
 #include "complexarray.h"
 //#include "global_function.h"
@@ -51,7 +52,6 @@ void ComplexArray::create(const int bnd1, const int bnd2, const int bnd3, const 
 	this->zero_out();
 }
 ComplexArray::ComplexArray(const ComplexArray &cd){
-	this->freemem();
 	const int size = cd.getSize();
 	this->init(size);
 	for (int i = 0; i < size; i++)
@@ -191,8 +191,10 @@ bool ComplexArray::operator!=(const ComplexArray &cd2)const{
     	return false;}
 void ComplexArray::zero_out(void){
 	const int size = this->getSize();
-	for (int i = 0;i < size; i++)
-		ptr[i] = std::complex < double> (0.0, 0.0);
+	if (size > 0 && ptr != nullptr) {
+        // std::fill is highly optimized by compilers for memory blocks
+        std::fill(ptr, ptr + size, std::complex<double>(0.0, 0.0));
+    }
 }
 void ComplexArray::negate(void){
 	const int size = this->getSize();

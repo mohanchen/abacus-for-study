@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iomanip>
 #include <cassert>
+#include<stdexcept>
 
 namespace ModuleBase
 {
@@ -13,8 +14,17 @@ namespace ModuleBase
 /// @brief A basic type of data for complex array
 class ComplexArray
 {
+	// Bonus Task: Granting friend access to global math functions
+    friend double abs2(const ComplexArray &cd);
+    friend std::complex<double> dot(const ComplexArray &cd1, const ComplexArray &cd2);
+    friend ComplexArray operator*(const double r, const ComplexArray &cd);
+    friend ComplexArray operator*(const std::complex<double> c, const ComplexArray &cd);
+    friend void scale_accumulate(double r, const ComplexArray &cd1, ComplexArray &cd2);
+    friend void scale_accumulate(const std::complex<double> c, const ComplexArray &cd1, ComplexArray &cd2);
+    friend void scaled_sum(double r1, const ComplexArray &cd1, double r2, const ComplexArray &cd2, ComplexArray &cd3);
+    friend void scaled_sum(std::complex<double> c1, const ComplexArray &cd1, std::complex<double> c2, const ComplexArray &cd2, ComplexArray &cd3);
+    friend void point_mult(ComplexArray &in1, ComplexArray &in2, ComplexArray &out);
 public:
-	std::complex<double> *ptr=nullptr; // data array
 	
 	ComplexArray(const int bnd1=0, const int bnd2=1, const int bnd3=1, const int bnd4=1);
 
@@ -61,10 +71,12 @@ public:
 	std::complex <double> &operator()
 		(const int ind1=0, const int ind2=0, const int ind3=0, const int ind4=0)
 		{
-			assert(ind1>=0);	assert(ind1<bound1);
-			assert(ind2>=0);	assert(ind2<bound2);
-			assert(ind3>=0);	assert(ind3<bound3);
-			assert(ind4>=0);	assert(ind4<bound4);
+		if (ind1 < 0 || ind1 >= bound1 || ind2 < 0 || ind2 >= bound2 ||
+    ind3 < 0 || ind3 >= bound3 || ind4 < 0 || ind4 >= bound4)
+{
+    // Throwing a standard C++ exception for robustness
+    throw std::out_of_range("ComplexArray index out of bounds");
+}
 			const int ind = ((ind1 * bound2 + ind2) * bound3 + ind3) * bound4 + ind4;
 			return ptr[ind];
 		};
@@ -100,6 +112,7 @@ public:
 	int getSize()const{ return bound1*bound2*bound3*bound4; }
 
 private:
+	std::complex<double> *ptr=nullptr; // data array
 	int bound1, bound2, bound3, bound4;	
 	void init(const int size);
 };
